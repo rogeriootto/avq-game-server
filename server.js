@@ -1,15 +1,15 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const WebSocket = require('ws');
+const WebSocket = require("ws");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const axios = require('axios');
+const axios = require("axios");
 
 const axiosClient = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: "https://avq-backend.vercel.app",
   timeout: 10000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     Authorization:
-      'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoicm9nZXJpbyIsInN1YiI6MSwiaWF0IjoxNzM2MzY4MjU4LCJleHAiOjE3Njc5MDQyNTh9.OxLdJ73qmAvfxlYSUjk7zlwS-IEmPutY9h84q9ckQdY',
+      "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoicm9nZXJpbyIsInN1YiI6MSwiaWF0IjoxNzM2MzY4MjU4LCJleHAiOjE3Njc5MDQyNTh9.OxLdJ73qmAvfxlYSUjk7zlwS-IEmPutY9h84q9ckQdY",
   },
 });
 
@@ -27,17 +27,17 @@ let guesses = [];
 const wss = new WebSocket.Server({ port: PORT });
 console.log(`Server started on port ${PORT}`);
 
-wss.on('connection', (ws) => {
-  console.log('A new client connected!');
+wss.on("connection", (ws) => {
+  console.log("A new client connected!");
   ws.send(
     JSON.stringify({
-      type: 'welcome',
-      message: 'Welcome',
+      type: "welcome",
+      message: "Welcome",
     }),
   );
 
   // Escuta mensagens do cliente
-  ws.on('message', async (data) => {
+  ws.on("message", async (data) => {
     try {
       const parsedData = JSON.parse(data); // Converte a string JSON em um objeto
 
@@ -50,9 +50,9 @@ wss.on('connection', (ws) => {
 
       let type = parsedData.type;
       switch (type) {
-        case 'join':
+        case "join":
           const { user, authToken } = parsedData.message;
-          console.log('Trying to join...');
+          console.log("Trying to join...");
           const exists = users.some(
             (arrUser) =>
               arrUser.user === user && arrUser.authToken === authToken,
@@ -61,71 +61,71 @@ wss.on('connection', (ws) => {
             users.push({ user, score: 0 });
             console.log(`User ${user} joined the game!`);
           } else {
-            console.log('User already joined');
+            console.log("User already joined");
           }
           break;
-        case 'start':
+        case "start":
           startTimer(30, wss, WebSocket);
           break;
-        case 'loadSongs':
+        case "loadSongs":
           await getAllSongs();
           break;
-        case 'sendNextVideo':
+        case "sendNextVideo":
           await getAllSongs();
           sendNextVideo(wss, WebSocket);
           startTimer(30, wss, WebSocket);
           break;
-        case 'guess':
+        case "guess":
           if (parsedData.guess) {
             guesses.push({ user: parsedData.user, guess: parsedData.guess });
           }
-          console.log('Guesses:', guesses);
+          console.log("Guesses:", guesses);
           break;
-        case 'playerStatus':
+        case "playerStatus":
           if (parsedData.user) {
             if (!usersStillConnected.includes(parsedData.user)) {
               usersStillConnected.push(parsedData.user.name);
-              console.log('Added user to the list');
+              console.log("Added user to the list");
             }
           }
           break;
-        case 'seeUsers':
-          console.log('Users:', users);
+        case "seeUsers":
+          console.log("Users:", users);
           break;
-        case 'seeSongs':
-          console.log('Songs:', songs);
+        case "seeSongs":
+          console.log("Songs:", songs);
           break;
-        case 'debugOptions':
+        case "debugOptions":
           generateOptions(songs[0]);
           break;
         default:
-          console.log('Tipo de mensagem não reconhecido:', parsedData.type);
+          console.log("Tipo de mensagem não reconhecido:", parsedData.type);
       }
     } catch (error) {
-      console.error('Erro ao processar mensagem:', error);
+      console.error("Erro ao processar mensagem:", error);
 
       // Envia um erro ao cliente
       ws.send(
         JSON.stringify({
-          type: 'error',
-          message: 'Mensagem inválida. Certifique-se de enviar JSON válido.',
+          type: "error",
+          message: "Mensagem inválida. Certifique-se de enviar JSON válido.",
         }),
       );
     }
   });
 
-  ws.on('close', () => {
-    console.log('A client disconnected');
+  ws.on("close", () => {
+    console.log("A client disconnected");
   });
 
-  ws.on('error', (error) => {
-    console.error('WebSocket error:', error);
+  ws.on("error", (error) => {
+    console.error("WebSocket error:", error);
   });
 });
 
 async function sendNextVideo(wss, WebSocket) {
   if (songs.length === 0) {
-    console.log('No more songs to play');
+    console.log("No more songs to play");
     return;
   }
   const selectedSong = songs[songs.length - 1];
@@ -144,7 +144,7 @@ async function sendNextVideo(wss, WebSocket) {
     if (client.readyState === WebSocket.OPEN) {
       client.send(
         JSON.stringify({
-          type: 'url',
+          type: "url",
           url: selectedSong.link,
           options: options,
           whoAdded: selectedSong.whoAdded,
@@ -164,16 +164,16 @@ const startTimer = (timeLeft, wss, WebSocket, selectedSong) => {
       // console.log(`Time left: ${timeLeft}`);
       wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({ type: 'timer', time: timeLeft }));
+          client.send(JSON.stringify({ type: "timer", time: timeLeft }));
         }
       });
       timeLeft--;
     } else {
       clearInterval(timer);
-      console.log('Timer ended, revealing answers');
+      console.log("Timer ended, revealing answers");
       wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({ type: 'reveal', reveal: true }));
+          client.send(JSON.stringify({ type: "reveal", reveal: true }));
         }
       });
       responseTimer(20, wss, WebSocket, selectedSong);
@@ -189,16 +189,16 @@ const responseTimer = (timeLeft, wss, WebSocket, selectedSong) => {
     if (timeLeft >= 0) {
       wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({ type: 'timer', time: timeLeft }));
+          client.send(JSON.stringify({ type: "timer", time: timeLeft }));
         }
       });
       timeLeft--;
     } else {
       clearInterval(timer);
-      console.log('Timer ended');
+      console.log("Timer ended");
       wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({ type: 'reveal', reveal: false }));
+          client.send(JSON.stringify({ type: "reveal", reveal: false }));
         }
       });
       checkIfPlayersAreStillOnGame();
@@ -208,10 +208,10 @@ const responseTimer = (timeLeft, wss, WebSocket, selectedSong) => {
 };
 
 function sendPlayersToFrontEnd() {
-  console.log('Sending players to front end, users:', users);
+  console.log("Sending players to front end, users:", users);
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify({ type: 'players', players: users }));
+      client.send(JSON.stringify({ type: "players", players: users }));
     }
   });
 }
@@ -219,7 +219,7 @@ function sendPlayersToFrontEnd() {
 function checkIfPlayersAreStillOnGame() {
   users.forEach((user, index) => {
     if (!usersStillConnected.includes(user.user)) {
-      console.log(user.user, 'is still connected');
+      console.log(user.user, "is still connected");
       users.splice(index, 1);
     }
   });
@@ -228,14 +228,14 @@ function checkIfPlayersAreStillOnGame() {
 
 async function getAllSongs() {
   await axiosClient
-    .get('/song/all')
+    .get("/songs/all")
     .then((response) => {
       songs = response.data;
       songs.sort(() => Math.random() - 0.5);
-      console.log('Songs are loaded and ready to play');
+      console.log("Songs are loaded and ready to play");
     })
     .catch((error) => {
-      console.error('Error getting songs:', error);
+      console.error("Error getting songs:", error);
     });
 }
 
@@ -262,7 +262,7 @@ async function generateOptions(selectedSong) {
       return;
     })
     .catch((error) => {
-      console.error('Error getting options:', error);
+      console.error("Error getting options:", error);
     });
 }
 
