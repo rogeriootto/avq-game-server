@@ -252,11 +252,9 @@ async function generateOptions(selectedSong) {
   // console.log('Selected song id:', selectedSong.id);
   // console.log('Selected category:', categorySelected.category.name);
   await axiosClient
-    .get(
-      `/category/${categorySelected.category.name}/random/${selectedSong.id}`,
-    )
+    .get(`/songs/getOtherOptions/${selectedSong.id}`)
     .then((response) => {
-      options = response.data;
+      options = response.data.map((song) => song.name);
       options.push(selectedSong.name);
       options.sort(() => Math.random() - 0.5);
       return;
